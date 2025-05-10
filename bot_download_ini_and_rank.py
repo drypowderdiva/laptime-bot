@@ -18,15 +18,6 @@ client = discord.Client(intents=intents)
 async def on_ready():
     print(f'✅ Logged in as {client.user}')
 
-    for guild in client.guilds:
-        for channel in guild.text_channels:
-            if channel.name == CHANNEL_NAME:
-                await post_leaderboard(channel)
-                await client.close()
-                return
-
-    print(f"❌ Channel '{CHANNEL_NAME}' not found.")
-
 async def post_leaderboard(channel):
     try:
         df = pd.read_excel(EXCEL_FILE)
