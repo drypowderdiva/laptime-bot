@@ -2,6 +2,7 @@ import discord
 import pandas as pd
 import os
 from collections import defaultdict
+from leaderboard_helper import post_leaderboard_dm
 
 # === CONFIGURATION ===
 TOKEN = os.getenv("TOKEN")  # ✅ secure for cloud deployment
