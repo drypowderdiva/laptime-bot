@@ -31,8 +31,12 @@ async def on_message(message):
     if message.author == client.user:
         return
 
-    # 📨 Send welcome instructions if someone DMs the bot with no file
-    if isinstance(message.channel, discord.DMChannel) and not message.attachments:
+    # 📨 Send welcome message only on empty DM with no content or attachments
+    if (
+        isinstance(message.channel, discord.DMChannel)
+        and not message.attachments
+        and not message.content.strip()
+    ):
         await message.channel.send(
             "👋 **Welcome to LapTimesBot!**\n\n"
             "I'm here to help you track and rank your fastest laps in *MX Bikes*.\n\n"
@@ -64,4 +68,3 @@ async def on_message(message):
                     await message.channel.send(f"❌ Failed to send DM: {e}")
 
 client.run(TOKEN)
-
