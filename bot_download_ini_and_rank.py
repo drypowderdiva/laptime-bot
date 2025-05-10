@@ -31,7 +31,7 @@ async def post_leaderboard(channel):
     try:
         df = pd.read_excel(EXCEL_FILE)
     except FileNotFoundError:
-        await channel.send("❌ Excel file not found.")
+        await post_leaderboard_dm(user.name, dm_channel)
         return
 
     leaderboard = defaultdict(list)
