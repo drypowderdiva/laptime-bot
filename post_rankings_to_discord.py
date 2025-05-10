@@ -1,11 +1,12 @@
 import discord
 import pandas as pd
+import os
 from collections import defaultdict
 
 # === CONFIGURATION ===
-TOKEN = 'MTM3MDc5NTQzOTMyMTc3NjI2MA.GGwhPd.5ktTQYdKAK38rzhvHELpYX1jFquJkPgg-eJKf4'
+TOKEN = os.getenv("TOKEN")
 CHANNEL_NAME = 'lap-times'
-EXCEL_FILE = 'combined_lap_records.xlsx'
+EXCEL_FILE = './records/combined_lap_records.xlsx'
 
 # === DISCORD CLIENT SETUP ===
 intents = discord.Intents.default()
@@ -59,3 +60,4 @@ async def post_leaderboard(channel):
             await channel.send(chunk)
 
 client.run(TOKEN)
+
