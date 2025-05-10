@@ -1,65 +1,59 @@
 import discord
 import pandas as pd
 import os
-import configparser
-import subprocess
 from collections import defaultdict
-from datetime import datetime, timezone
 
 # === CONFIGURATION ===
-TOKEN = os.getenv("TOKEN")
-DOWNLOAD_FOLDER = "./records"
-EXCEL_FILE = os.path.join(DOWNLOAD_FOLDER, 'combined_lap_records.xlsx')
+TOKEN = os.getenv("TOKEN")  # ✅ secure for cloud deployment
 CHANNEL_NAME = 'lap-times'
+EXCEL_FILE = './records/combined_lap_records.xlsx'  # ✅ cloud-safe path
 
-# Ensure the records folder exists
-if not os.path.exists(DOWNLOAD_FOLDER):
-    os.makedirs(DOWNLOAD_FOLDER)
-
-# === DISCORD SETUP ===
+# === DISCORD CLIENT SETUP ===
 intents = discord.Intents.default()
 intents.message_content = True
-intents.messages = True
-intents.guilds = True
-intents.members = True
-
 client = discord.Client(intents=intents)
 
 @client.event
 async def on_ready():
-    print(f"✅ Logged in as {client.user}")
+    print(f'✅ Logged in as {client.user}')
 
-@client.event
-async def on_message(message):
-    if message.author == client.user:
+    for guild in client.guilds:
+        for channel in guild.text_channels:
+            if channel.name == CHANNEL_NAME:
+                await post_leaderboard(channel)
+                await client.close()
+                return
+
+    print(f"❌ Channel '{CHANNEL_NAME}' not found.")
+
+async def post_leaderboard(channel):
+    try:
+        df = pd.read_excel(EXCEL_FILE)
+    except FileNotFoundError:
+        await channel.send("❌ Excel file not found.")
         return
 
-    if message.channel.name == CHANNEL_NAME and message.attachments:
-        for attachment in message.attachments:
-            if attachment.filename.lower().endswith('.ini'):
-                player_name = message.author.name
-                save_path = os.path.join(DOWNLOAD_FOLDER, f"{player_name}_records.ini")
-                await attachment.save(save_path)
-                print(f"⬇️ Saved {attachment.filename} as {save_path}")
+    leaderboard = defaultdict(list)
+    for _, row in df.iterrows():
+        leaderboard[row['Track']].append((row['Player'], row["Lap Time (sec)"], row["Lap Time"]))
 
-        try:
-            # Run your processing scripts
-            subprocess.run(["python", "combine_lap_times.py"], check=True)
-            subprocess.run(["python", "post_rankings_to_discord.py"], check=True)
+    output = "**🏆 Lap Time Rankings (Tracks with Multiple Players)**\n\n"
+    for track, entries in leaderboard.items():
+        unique_players = set(p for p, _, _ in entries)
+        if len(unique_players) < 2:
+            continue
 
-            # ✅ DM the user who uploaded
-            user = message.author
-            dm_channel = await user.create_dm()
-            await dm_channel.send(
-                f"✅ Hey {user.name}, your lap times were uploaded successfully!\nThanks for contributing — check #lap-times for updated rankings."
-            )
+        sorted_entries = sorted(entries, key=lambda x: x[1])
+        output += f"__**{track}**__\n"
+        for i, (player, _, time_str) in enumerate(sorted_entries, start=1):
+            output += f"{i}. {player} — {time_str}\n"
+        output += "\n"
 
-        except subprocess.CalledProcessError as e:
-            await message.channel.send(f"❌ Error running script: {e}")
-
-def convert_seconds_to_lap_time(seconds):
-    minutes = int(seconds // 60)
-    remaining = seconds % 60
-    return f"{minutes}'{remaining:06.3f}"
+    if output.strip():
+        if len(output) <= 1900:
+            await channel.send(output)
+        else:
+            for i in range(0, len(output), 1900):
+                await channel.send(output[i:i+1900])
 
 client.run(TOKEN)
