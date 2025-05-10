@@ -51,13 +51,15 @@ async def post_leaderboard(channel):
             output += f"{i}. {player} — {time_str}\n"
         output += "\n"
 
-    # Send in one message if possible
-    if len(output) < 1900:
+# Only send once — safely
+if output.strip():  # don’t send if it's empty
+    if len(output) <= 1900:
         await channel.send(output)
     else:
         chunks = [output[i:i+1900] for i in range(0, len(output), 1900)]
         for chunk in chunks:
             await channel.send(chunk)
+
 
 client.run(TOKEN)
 
