@@ -31,7 +31,16 @@ async def on_message(message):
     if message.author == client.user:
         return
 
-    # Accept INI file via DM or in #lap-times channel
+    # 📨 Send welcome instructions if someone DMs the bot with no file
+    if isinstance(message.channel, discord.DMChannel) and not message.attachments:
+        await message.channel.send(
+            "👋 Hi there! Send me your `records.ini` file to get your personal leaderboard.\n"
+            "I'll show how you rank on each track and attach a full HTML breakdown.\n\n"
+            "✅ Just upload the file directly to this DM!"
+        )
+        return
+
+    # 📥 Handle INI uploads via DM or #lap-times
     if (isinstance(message.channel, discord.DMChannel) or message.channel.name == CHANNEL_NAME) and message.attachments:
         for attachment in message.attachments:
             if attachment.filename.lower().endswith('.ini'):
@@ -41,10 +50,7 @@ async def on_message(message):
                 print(f"⬇️ Saved {attachment.filename} as {save_path}")
 
                 try:
-                    # ✅ Only run the combiner
                     subprocess.run(["python", "combine_lap_times.py"], check=True)
-
-                    # ✅ Send DM using helper function (only once)
                     await post_leaderboard_dm(player_name, message.author)
 
                 except subprocess.CalledProcessError as e:
