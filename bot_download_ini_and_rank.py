@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 import os
 TOKEN = os.getenv("TOKEN")
 CHANNEL_NAME = 'lap-times'
-DOWNLOAD_FOLDER = "C:/Users/bigda/OneDrive/Documents/Discord LapTimes"
+DOWNLOAD_FOLDER = "./records"
 EXCEL_FILE = os.path.join(DOWNLOAD_FOLDER, 'combined_lap_records.xlsx')
 
 intents = discord.Intents.default()
