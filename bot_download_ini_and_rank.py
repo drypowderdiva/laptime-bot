@@ -41,9 +41,10 @@ async def on_message(message):
                 print(f"⬇️ Saved {attachment.filename} as {save_path}")
 
                 try:
+                    # ✅ Only run the combiner
                     subprocess.run(["python", "combine_lap_times.py"], check=True)
 
-                    # ✅ DM rankings back to user without triggering rate limit
+                    # ✅ Send DM using helper function (only once)
                     await post_leaderboard_dm(player_name, message.author)
 
                 except subprocess.CalledProcessError as e:
