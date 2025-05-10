@@ -42,10 +42,18 @@ async def on_message(message):
                 await attachment.save(save_path)
                 print(f"⬇️ Saved {attachment.filename} as {save_path}")
 
-        # Run the lap processing scripts
         try:
+            # Run your processing scripts
             subprocess.run(["python", "combine_lap_times.py"], check=True)
             subprocess.run(["python", "post_rankings_to_discord.py"], check=True)
+
+            # ✅ DM the user who uploaded
+            user = message.author
+            dm_channel = await user.create_dm()
+            await dm_channel.send(
+                f"✅ Hey {user.name}, your lap times were uploaded successfully!\nThanks for contributing — check #lap-times for updated rankings."
+            )
+
         except subprocess.CalledProcessError as e:
             await message.channel.send(f"❌ Error running script: {e}")
 
