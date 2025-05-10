@@ -3,6 +3,10 @@ import pandas as pd
 import os
 from datetime import datetime, timezone
 
+# Use a local folder for Railway or any cloud host
+DOWNLOAD_FOLDER = "./records"
+OUTPUT_FILE = os.path.join(DOWNLOAD_FOLDER, "combined_lap_records.xlsx")
+
 def convert_seconds_to_lap_time(seconds):
     minutes = int(seconds // 60)
     remaining = seconds % 60
@@ -38,14 +42,14 @@ def read_lap_records(ini_path, player_name):
     return pd.DataFrame(data)
 
 def main():
-    folder = "."
-    output_file = "combined_lap_records.xlsx"
-
     all_data = []
 
-    for file in os.listdir(folder):
+    if not os.path.exists(DOWNLOAD_FOLDER):
+        os.makedirs(DOWNLOAD_FOLDER)
+
+    for file in os.listdir(DOWNLOAD_FOLDER):
         if file.endswith(".ini") and "records" in file.lower():
-            ini_path = os.path.join(folder, file)
+            ini_path = os.path.join(DOWNLOAD_FOLDER, file)
             player_name = file.split("_")[0]
             df = read_lap_records(ini_path, player_name)
             all_data.append(df)
@@ -58,8 +62,9 @@ def main():
 
     fastest_per_track = full_df.sort_values("Lap Time (sec)").groupby(["Player", "Track"], as_index=False).first()
 
-    fastest_per_track.to_excel(output_file, index=False)
-    print(f"✅ Combined leaderboard saved to: {output_file}")
+    fastest_per_track.to_excel(OUTPUT_FILE, index=False)
+    print(f"✅ Combined leaderboard saved to: {OUTPUT_FILE}")
 
 if __name__ == "__main__":
     main()
+    
