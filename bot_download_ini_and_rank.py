@@ -7,12 +7,16 @@ from collections import defaultdict
 from datetime import datetime, timezone
 
 # === CONFIGURATION ===
-import os
 TOKEN = os.getenv("TOKEN")
-CHANNEL_NAME = 'lap-times'
 DOWNLOAD_FOLDER = "./records"
 EXCEL_FILE = os.path.join(DOWNLOAD_FOLDER, 'combined_lap_records.xlsx')
+CHANNEL_NAME = 'lap-times'
 
+# Ensure the records folder exists
+if not os.path.exists(DOWNLOAD_FOLDER):
+    os.makedirs(DOWNLOAD_FOLDER)
+
+# === DISCORD SETUP ===
 intents = discord.Intents.default()
 intents.message_content = True
 intents.messages = True
@@ -38,13 +42,10 @@ async def on_message(message):
                 await attachment.save(save_path)
                 print(f"⬇️ Saved {attachment.filename} as {save_path}")
 
-        # === RUN YOUR SCRIPTS HERE ===
-        combine_script = os.path.join(DOWNLOAD_FOLDER, "combine_lap_times.py")
-        post_script = os.path.join(DOWNLOAD_FOLDER, "post_rankings_to_discord.py")
-
+        # Run the lap processing scripts
         try:
-            subprocess.run(["python", combine_script], check=True)
-            subprocess.run(["python", post_script], check=True)
+            subprocess.run(["python", "combine_lap_times.py"], check=True)
+            subprocess.run(["python", "post_rankings_to_discord.py"], check=True)
         except subprocess.CalledProcessError as e:
             await message.channel.send(f"❌ Error running script: {e}")
 
