@@ -15,30 +15,37 @@ async def post_leaderboard_dm(user_name, channel):
         await channel.send("❌ You don’t have valid lap times on any ranked tracks yet.")
         return
 
-    output = f"✅ Hey {user_name}, here are your current rankings:\n\n"
+    # Prepare HTML full leaderboard
+    html_lines = []
+    preview = f"✅ Hey {user_name}, here's a preview of your top 3 ranked tracks:\n\n"
+    track_count = 0
 
     for track in user_tracks:
         track_df = df[df['Track'] == track].copy()
         track_df.sort_values("Lap Time (sec)", inplace=True)
         top10 = track_df.head(10)
 
-        output += f"🏁 __**{track}**__\n"
-        user_in_top10 = False
+        # HTML block for the track
+        html_lines.append(f"<h3>{track}</h3><ol>")
+        for row in top10.itertuples():
+            html_lines.append(f"<li>{row.Player} — {row._4}</li>")
+        html_lines.append("</ol>")
 
-        for i, row in enumerate(top10.itertuples(), 1):
-            output += f"{i}. {row.Player} — {row._4}\n"
-            if row.Player == user_name:
-                user_in_top10 = True
+        # DM preview for top 3 tracks
+        if track_count < 3:
+            preview += f"🏁 __**{track}**__\n"
+            for i, row in enumerate(top10.itertuples(), 1):
+                preview += f"{i}. {row.Player} — {row._4}\n"
+            preview += "\n"
+            track_count += 1
 
-        if not user_in_top10:
-            user_row = track_df[track_df['Player'] == user_name].iloc[0]
-            user_rank = track_df[track_df["Lap Time (sec)"] < user_row["Lap Time (sec)"]].shape[0] + 1
-            output += f"...\n{user_rank}. {user_row['Player']} — {user_row['Lap Time']}\n"
+    html_output = "<html><body>" + "\n".join(html_lines) + "</body></html>"
+    html_path = f"./records/{user_name}_leaderboard.html"
+    with open(html_path, "w", encoding="utf-8") as f:
+        f.write(html_output)
 
-        output += "\n"
+    try:
+        await channel.send(preview + "\n📎 Full rankings attached as HTML.", file=discord.File(html_path))
+    except Exception as e:
+        await channel.send(f"❌ Failed to send full leaderboard: {e}")
 
-    if len(output) <= 1900:
-        await channel.send(output)
-    else:
-        for i in range(0, len(output), 1900):
-            await channel.send(output[i:i+1900])
