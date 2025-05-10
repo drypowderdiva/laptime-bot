@@ -34,9 +34,14 @@ async def on_message(message):
     # 📨 Send welcome instructions if someone DMs the bot with no file
     if isinstance(message.channel, discord.DMChannel) and not message.attachments:
         await message.channel.send(
-            "👋 Hi there! Send me your `records.ini` file to get your personal leaderboard.\n"
-            "I'll show how you rank on each track and attach a full HTML breakdown.\n\n"
-            "✅ Just upload the file directly to this DM!"
+            "👋 **Welcome to LapTimesBot!**\n\n"
+            "I'm here to help you track and rank your fastest laps in *MX Bikes*.\n\n"
+            "📥 To get started, just upload your `records.ini` file in this DM.\n"
+            "I'll compare your times to other riders, and send you:\n"
+            "• 🏁 A preview of your top 3 ranked tracks\n"
+            "• 📊 Your position on each track\n"
+            "• 📎 A full HTML leaderboard to download\n\n"
+            "✅ Go ahead — upload your file now!"
         )
         return
 
@@ -59,3 +64,4 @@ async def on_message(message):
                     await message.channel.send(f"❌ Failed to send DM: {e}")
 
 client.run(TOKEN)
+
